@@ -1,0 +1,26 @@
+\pagenumbering{Roman}
+\setlength{\headheight}{14.49998pt}
+\input{Acknowledgments.tex}
+
+\tableofcontents
+\listoffigures
+% \listoftables
+\clearpage
+\pagenumbering{arabic}
+\chapter*{\centering General Introduction}
+
+\phantomsection % bech lienet el toc ykounou s7a7
+
+\addcontentsline{toc}{chapter}{General Introduction}
+
+\lettrine{T}{he} global shift toward renewable energy is no longer a distant strategic objective; it is an immediate economic and societal transition. In Tunisia, and particularly in regions with strong solar potential such as Sfax, interest in photovoltaic solutions has grown significantly among households and businesses seeking to reduce energy costs and improve long-term energy autonomy. For companies operating in this market, commercial responsiveness has become as important as technical expertise, because early customer interaction often determines whether a potential lead evolves into a concrete project.
+
+At the same time, communication habits have moved decisively toward instant messaging platforms. Prospects now expect rapid, clear, and personalized answers through channels they already use daily, especially Facebook Messenger, Instagram, and WhatsApp. This evolution creates a structural challenge for small and medium-sized companies: while inquiry volume increases, internal teams remain primarily focused on operational and field activities, which limits their ability to ensure consistent real-time engagement across multiple digital channels.
+
+Within this context, artificial intelligence offers a practical opportunity to strengthen first-contact quality without replacing human sales expertise. An AI commercial assistant can provide immediate responses, collect relevant pre-qualification information, and generate approximate quotation guidance that helps maintain user interest until a human agent takes over. The value of such a system is therefore not limited to automation; it lies in improving conversion conditions by reducing response delays and standardizing information quality at the beginning of the customer journey.
+
+The present project addresses this need through an LLM-based assistant integrated into a Node.js/Express backend and connected to Meta communication channels via webhook interfaces. Instead of relying on model fine-tuning, the approach emphasizes structured prompt engineering, controlled tool usage, and explicit safety constraints to improve factual reliability in commercially sensitive interactions. This design reflects a pragmatic engineering choice aligned with the available data, operational requirements, and maintainability constraints of the host company.
+
+This report details the rationale, requirements, architecture, and implementation choices behind the proposed solution. It follows a progressive structure: Chapter 1 establishes the general context and conceptual foundations; Chapter 2 formalizes requirements and project scope; Chapter 3 presents architecture and design decisions, including AI model selection; Chapter 4 covers implementation aspects and operational flow; and the final chapter synthesizes outcomes, limitations, and perspectives for future enhancement.
+
+\clearpage

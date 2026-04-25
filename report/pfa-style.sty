@@ -1,0 +1,35 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{pfa-style}[2026/04/24 Report styling]
+
+\RequirePackage[a4paper,hmargin=2.5cm,vmargin=2cm,includeheadfoot,centering]{geometry}
+\RequirePackage{fancyhdr}
+\RequirePackage{eso-pic}
+\RequirePackage{atbegshi}
+\RequirePackage{setspace}
+\RequirePackage{graphicx}
+\RequirePackage{xcolor}
+\RequirePackage{indentfirst}
+\RequirePackage{titlesec}
+\RequirePackage{lettrine}
+
+\definecolor{sectionseparatorgray}{gray}{0.55}
+
+\setlength{\parindent}{1.5em}
+\setlength{\parskip}{0.5em}
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+
+  \titleformat{\part}[hang]{\centering\Huge\bfseries}{\chaptername\hspace{20pt}\thepart\hspace{20pt}\textcolor{sectionseparatorgray}{\rule[-0.6ex]{0.7pt}{2.2ex}}\hspace{20pt}}{00pt}{\Huge\bfseries}\titlespacing{\part}{\fill}{\fill}{\fill}
+\titleformat{\section}[hang]{\Large\bfseries}{\thesection\hspace{20pt}\textcolor{sectionseparatorgray}{\rule[-0.6ex]{0.7pt}{2.2ex}}\hspace{20pt}}{00pt}{\Large\bfseries}\titlespacing{\part}{\fill}{\fill}{\fill}
+
+\RequirePackage[hidelinks]{hyperref}
+\RequirePackage{bookmark}
+
+\setlength{\arrayrulewidth}{0.4mm}
+\setlength{\tabcolsep}{10pt}
+
+\AtBeginDocument{%
+  \onehalfspacing
+  \raggedbottom
+  \renewcommand{\footrule}{}%
+}
