@@ -7,3 +7,233 @@
 \rfoot{\textsl{\footnotesize}}
 
 \chapter{Implementation}
+
+\section{Introduction}
+This chapter presents the practical realization of the proposed solution in production-oriented conditions. It focuses on how the chatbot is configured, executed, and observed in real operation across the target communication channels, with emphasis on actual runtime behavior rather than conceptual design alone.
+
+The chapter also documents the concrete setup workflow followed during deployment preparation, including platform-side configuration steps and end-to-end interaction flow. In this way, the implementation perspective complements the previous design chapter by showing how architectural and AI concepts are translated into a functioning application.
+
+\section{Production Environment Overview}
+This section presents the practical environment used to build, configure, and run the chatbot across development, testing, and production-oriented conditions. The objective is to clarify how technology choices were distributed across backend orchestration, persistence, AI interaction, channel configuration, and modeling support, so that the implementation process remains reproducible and technically coherent.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Images/development_architecture.png}
+    \caption{Layered development environment architecture connecting user channels, backend orchestration, and AI/data persistence services.}
+    \label{fig:development-architecture}
+\end{figure}
+
+\subsection{Programming Language Choices}
+The language and framework choices were guided by integration speed, ecosystem maturity, and compatibility with webhook-based channel orchestration.
+
+\subsubsection{Backend}
+Backend development relies on Node.js\cite{nodejs_docs} with Express\cite{express_docs} as the main application framework. This combination supports event-driven request handling and aligns naturally with the webhook communication model used by Meta messaging channels. The same backend layer coordinates validation, policy checks, AI request orchestration, and outbound payload preparation, which keeps operational flow concentrated in one consistent runtime environment.
+
+Input and payload validation logic is reinforced through Zod\cite{zod_docs}, which provides schema-driven type-safe validation concepts across request processing steps. In practice, this reduces ambiguous payload handling and improves reliability in channel-facing endpoints where malformed or incomplete events must be filtered early.
+
+\subsubsection{Data Persistence}
+Data persistence is managed through MongoDB\cite{mongodb_docs}. The database is used to keep conversation continuity over multiple turns, persist user-specific state, and maintain operational flags such as handoff cooldown status after human-assistance requests. This persistence concept is essential because conversational reliability depends on state recovery between successive messages rather than isolated one-shot processing.
+
+MongoDB was selected for its document-oriented structure, which maps well to conversational data models where message content, metadata, and state attributes evolve incrementally across interaction cycles.
+
+\subsubsection{AI}
+AI interaction is structured around the Vercel AI SDK\cite{vercel_ai_sdk_docs}, used as the orchestration interface between the backend and model providers. In production-oriented operation, response generation is handled through the Claude API\cite{anthropic_claude_api_docs}, chosen for strong instruction-following behavior and stable integration with the existing orchestration design.
+In this production configuration, the assistant is configured to respond primarily in French or Tunisian dialect, selected according to the user's language and conversational context.
+
+For local experimentation and iterative testing, Ollama\cite{ollama_docs} with GPT-OSS\cite{gpt_oss_ollama_page} was used to validate prompt behavior and tool-calling logic without depending on remote API cycles. This dual setup (local test models + production API model) improved development agility while preserving a clear boundary between experimentation and production traffic.
+
+\subsection{Development Tools}
+The primary development workspace was Visual Studio Code\cite{vscode_docs}, used for code authoring, debugging, dependency management, and iterative runtime inspection. Its extension ecosystem and terminal integration simplified daily development cycles and supported fast verification of endpoint and pipeline behavior.
+
+Channel and production-facing configuration tasks were conducted through Meta for Developers\cite{meta_developer_platform_docs} and Meta Business Suite\cite{meta_business_suite_docs}. These platforms were used to configure application-level channel settings, webhook-related operational options, and business-side communication controls required for real deployment readiness.
+
+\subsection{Deployment Environment}
+For deployment, we followed a serverless hosting concept based on Azure Functions\cite{azure_functions_docs}. This choice provides public HTTPS endpoints suitable for webhook exposure, while keeping operational scaling and runtime allocation aligned with variable messaging traffic. In this model, the chatbot backend logic is exposed through function-based endpoints that remain compatible with Meta webhook verification and message callback requirements.
+
+From an operational perspective, serverless deployment reduces infrastructure management overhead and supports continuous delivery of endpoint updates without maintaining a permanently provisioned server instance. This deployment setup is therefore consistent with the project objective of maintaining a responsive production chatbot under constrained operational resources.
+
+\subsection{Modeling Tools}
+UML modeling and architecture documentation were developed using Sparx Enterprise Architect\cite{sparx_ea_docs}. The tool supported structured representation of use cases, activity flow, and sequence-level reasoning, enabling a consistent bridge between requirement analysis, system design, and implementation-oriented documentation.
+
+\section{Meta Dashboard Webhook Configuration}
+This section documents the operational configuration sequence followed in Meta for Developers to connect the chatbot backend with production messaging channels. The objective of this setup was to establish a verified webhook pipeline and bind it to the official Sparky business communication assets under one application context\cite{meta_developer_platform_docs}\cite{meta_webhooks_docs}.
+
+The configuration workflow was executed in the following order:
+\begin{enumerate}
+    \item Create a new Meta application and associate it with the Sparky business account.
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.9\textwidth]{Images/meta/app_dashboard.png}
+        \caption{Meta application creation and business association in Meta for Developers.}
+        \label{fig:meta-step1-app-business}
+    \end{figure}
+
+    \item Generate and register the application-level secret token (app-secret-related credential) required for secure platform configuration.
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.9\textwidth]{Images/meta/app_settings.png}
+        \caption{App secret generation and registration for secure application configuration (critical details omitted).}
+        \label{fig:meta-step2-app-secret}
+    \end{figure}
+
+    \item Add the three required channel use cases: Messenger, WhatsApp, and Instagram.
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.9\textwidth]{Images/meta/app_use_cases.png}
+        \caption{Activation of Messenger, WhatsApp, and Instagram use cases in the Meta dashboard.}
+        \label{fig:meta-step3-use-cases}
+    \end{figure}
+
+    \item Register the public webhook URL exposed by the backend deployment, and add a verification token that ensures secure callback validation during webhook verification and event delivery.
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.9\textwidth]{Images/meta/app_webhook_url.png}
+        \caption{Webhook callback URL configuration for channel event delivery (Messenger).}
+        \label{fig:meta-step4-webhook-url}
+    \end{figure}
+
+    \item Execute webhook verification and confirm that the callback endpoint responds correctly to Meta verification challenges. Meta does not allow us to proceed without this step.
+
+    \item Subscribe the application to the \textit{messages} event and validate event reception through platform-side testing.
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.9\textwidth]{Images/meta/app_webhook_fields.png}
+        \caption{Subscription to the "messages" event.}
+        \label{fig:meta-step6-messages-subscription}
+    \end{figure}
+
+    \item Connect the official \textit{Sparky Solutions Photovoltaiques} Facebook Page for Messenger and Instagram messaging flows. For WhatsApp, the connection is made with a phone number instead.
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.9\textwidth]{Images/meta/app_pages.png}
+        \caption{Connection of the Sparky Solutions Photovoltaiques page to the Messenger use case.}
+        \label{fig:meta-step7-page-connection}
+    \end{figure}
+
+    \item Generate and store channel access tokens in secure backend configuration so outbound messaging can be authenticated per channel.
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.9\textwidth]{Images/meta/app_token.png}
+        \caption{Channel access token generation and secure storage workflow for outbound authentication.}
+        \label{fig:meta-step9-access-tokens}
+    \end{figure}
+\end{enumerate}
+
+After these steps, inbound message delivery and outbound response dispatch were both validated in production-like conditions, confirming that the same backend orchestration flow could be reached from all three channels under one integrated webhook design.
+
+\section{End-to-End Runtime Workflow}
+
+This section documents a representative production-oriented message cycle in which an existing user sends a follow-up message during an active conversation with the chatbot. The cycle traces the complete path from user message submission through AI processing, response generation, channel delivery, and state persistence, demonstrating how the orchestration, AI, and persistence layers work in concert during real operation.
+
+The runtime flow is deterministic and repeats for each new user message. It begins when a user types a message into one of the supported channels (Messenger, Instagram, or WhatsApp) and ends after the chatbot response has been delivered to the user and conversation context has been updated in the database.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Images/message.png}
+    \caption{User-side message screenshot: customer initiates a follow-up inquiry during an active conversation.}
+    \label{fig:runtime-user-message}
+\end{figure}
+
+\subsection{Nominal Workflow}
+The following sequence describes the nominal (expected) path taken by a single message through the system:
+
+\begin{enumerate}
+    \item \textbf{User sends message.} The user types a message into the supported messaging channel and presses send.
+    \item \textbf{Channel receives and forwards webhook.} The messaging platform (Meta) immediately routes the incoming message to the backend webhook endpoint as a JSON payload containing sender metadata, message content, channel context, and timestamp.
+    \item \textbf{Webhook validation and normalization.} The backend validates the webhook signature using the stored app-secret credential, confirms the payload is well-formed, and normalizes channel-specific message data into a common internal message model.
+    \item \textbf{Read receipt and typing indicator sent.} Immediately after webhook acceptance, the backend sends platform-specific acknowledgment signals (read receipt for the incoming message, typing indicator to show the user that the chatbot is processing).
+    \item \textbf{Context loading from database.} The backend queries the database for the user-specific conversation history using the sender ID extracted from the webhook payload. This includes all prior messages in the current conversation and operational state flags (handoff cooldown status, conversation preferences).
+    \item \textbf{AI request assembly.} The backend constructs the complete AI input payload, which includes the system prompt, conversation history, current user message, tool definitions, and any other context required by the model.
+    \item \textbf{AI processing and tool calling.} The Vercel AI SDK submits the request to Claude API. The model reasons over the input, may invoke tool calls if needed (for example, to compute a quote), waits for tool results, and generates the final response text.
+    \item \textbf{Response payload generation.} The backend formats the AI-generated response into the channel-specific outbound payload format (Messenger, Instagram, or WhatsApp API structure).
+    \item \textbf{Channel delivery.} The backend sends the outbound payload to the Meta API endpoint. The message is queued for delivery to the user.
+    \item \textbf{Database state update.} The backend persists the new user message and the chatbot response into the database under the user record, updating the conversation history and operational timestamps.
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Images/ai_input_flow.png}
+    \caption{AI input assembly: system prompt, conversation history, current message, and tool definitions combined for model inference.}
+    \label{fig:runtime-ai-input}
+\end{figure}
+
+\subsection{Runtime Evidence}
+The following table maps each workflow step to observable evidence (logs, screenshots, or platform events) that confirms the step completed successfully in production:
+
+\begin{table}[H]
+\centering
+\caption{End-to-end runtime workflow evidence mapping}
+\label{tab:runtime-evidence}
+\begin{tabular}{|p{0.12\textwidth}|p{0.28\textwidth}|p{0.45\textwidth}|}
+\hline
+\textbf{Step} & \textbf{System Action} & \textbf{Observable Evidence} \\
+\hline
+1 & User sends message & Message visible in channel UI \\
+\hline
+2 & Webhook routed to backend & Backend logs show webhook request received with correct payload structure \\
+\hline
+3 & Payload validated and normalized & Backend logs show validation passed, message normalized to internal model \\
+\hline
+4 & Read receipt + typing sent & Channel UI shows read indicator, typing status visible to user \\
+\hline
+5 & Context loaded from DB & Backend logs show database query completed, conversation history retrieved \\
+\hline
+6 & AI input assembled & Backend logs show full AI request object with system prompt, history, and current message \\
+\hline
+7 & Model processes and responds & Backend logs show model API call completed, response tokens received \\
+\hline
+8 & Response formatted for channel & Backend logs show channel-specific payload generated and validated \\
+\hline
+9 & Message delivered to user & Channel API confirms delivery, user sees response message in UI \\
+\hline
+10 & DB state updated & Backend logs show database insert/update completed, conversation history persisted \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Images/database_state.png}
+    \caption{Database state after reply: conversation history and operational flags updated and persisted.}
+    \label{fig:runtime-db-state}
+\end{figure}
+
+\subsection{Non-Nominal Branches}
+Although the nominal workflow above represents the expected path, the system also handles several important deviation cases without breaking continuity:
+
+\begin{itemize}
+    \item \textbf{Prompt-injection attempt:} If the user message contains patterns that attempt to reveal or override the system prompt, the backend filters it at the validation step and returns a controlled decline message without invoking the AI layer.
+    \item \textbf{Human-handoff request:} If the user explicitly requests a human agent, the backend marks the conversation in handoff state, disables automated replies for a configured cooldown period, and notifies operations.
+    \item \textbf{Tool execution failure:} If a tool call fails (for example, quote calculation fails due to missing input), the backend captures the error, logs it, and returns a fallback response inviting the user to provide more details rather than propagating an error or returning stale data.
+    \item \textbf{AI service timeout:} If the Claude API fails to respond within a timeout window, the backend returns a controlled fallback message (e.g., ``I'm experiencing temporary delays, please try again in a moment'') and logs the incident for investigation.
+\end{itemize}
+
+\section{Example Interaction Scenarios}
+This section presents two production-style interaction examples extracted from real channel conversations. The first scenario shows nominal commercial progression from needs collection to quote estimation and human follow-up preparation in Tunisian dialect. The second scenario shows adversarial prompt-injection behavior in English and highlights how the assistant preserves instruction confidentiality under repeated attack attempts.
+
+\subsection{Scenario 1: Quote Generation + Human Handoff}
+In this exchange, the user asks in Tunisian dialect for a photovoltaic installation at home. The assistant follows a structured commercial sequence: it requests location details, confirms installation context (residential), asks for monthly electricity consumption, and then produces an approximate quote range (1 to 3 panels, 1000 to 3000 TND). After delivering the estimate, the assistant requests a phone number so that a human commercial agent can continue the process and finalize the offer. This scenario demonstrates two core production objectives in one flow: fast approximate quote generation and smooth transition toward human-led commercial follow-up.
+
+\noindent\textit{Note: The screenshot shown in this scenario was captured in a testing environment using Ollama with the \texttt{gpt-oss:120b} model. Therefore, observed response quality and latency in this example are not representative of production-level performance.}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.62\textwidth]{Images/quote_scenario.png}
+    \caption{Quote generation and human handoff preparation in Tunisian dialect: structured data collection, approximate estimate, and phone-number capture for commercial follow-up.}
+    \label{fig:scenario-quote-handoff}
+\end{figure}
+
+\subsection{Scenario 2: Prompt Injection Attack}
+In this conversation, the user writes in English and repeatedly attempts to force system-prompt disclosure through direct override commands, emotional pressure, and pseudo-system tokens. The assistant consistently refuses to reveal internal instructions and returns controlled non-compliance responses. One message includes an emergency-style claim; the assistant answers with safety guidance while still refusing prompt disclosure, which preserves both user-facing support behavior and confidentiality constraints. This scenario confirms that instruction-protection policy remains active under multilingual adversarial input, including English attack patterns, even though the assistant is primarily configured for French and Tunisian dialect interactions.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.62\textwidth]{Images/attack_scenario.png}
+    \caption{Prompt-injection attack in English: repeated override attempts are rejected, and no system prompt content is disclosed.}
+    \label{fig:scenario-prompt-injection}
+\end{figure}
+
+\section{Conclusion}
+This chapter translated the previous design concepts into an operational implementation view by detailing the real technologies, deployment context, and channel configuration workflow used to run the chatbot in production-oriented conditions. It showed how Node.js/Express orchestration, MongoDB persistence, AI-layer integration, and Meta webhook setup were combined into one coherent execution pipeline across Messenger, Instagram, and WhatsApp.
+
+The end-to-end runtime description and the two interaction scenarios confirmed that the system can simultaneously support commercial objectives and operational safeguards: fast quote-oriented dialogue, structured transition to human follow-up, and strict resistance to prompt-injection attempts. Together, these results demonstrate that the implemented solution is not only technically functional, but also aligned with the project's business goal of accelerating customer engagement while preserving control, continuity, and response reliability.
