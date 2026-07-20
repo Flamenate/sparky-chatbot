@@ -1,4 +1,3 @@
-import { ollama } from "ai-sdk-ollama";
 import { generateText, stepCountIs, tool } from "ai";
 import { z } from "zod";
 import { ConversationSchema } from "../models/Conversation";
@@ -10,10 +9,12 @@ import {
   conversationExamples,
   defaultIncreasePercent,
   frenchOnlyWords,
+  frequentlyAskedQuestions,
   KILOWATT_PRICE_DINAR,
   MAX_PANEL_KILOWATT,
   MIN_PANEL_KILOWATT,
 } from "../data/sparky";
+import { anthropic } from "@ai-sdk/anthropic";
 
 export async function generateResponse(
   conversation: HydratedDocument<ConversationSchema>,
@@ -22,7 +23,8 @@ export async function generateResponse(
   let aiResponse: string | null = null;
   try {
     const { text } = await generateText({
-      model: ollama("gpt-oss:120b-cloud"),
+      // model: ollama("gpt-oss:120b-cloud"),
+      model: anthropic("claude-haiku-4-5-20251001"),
       system: `Context:
 You are a friendly commercial customer service assistant.
 You do NOT use markdown in your responses at all.
@@ -40,7 +42,7 @@ You do not offer after-sales services. If the user asks for after-sales services
 IF AT ANY POINT DURING THE CONVERSATION THE USER ASKS TO TALK TO A REAL PERSON OR A MANAGER, CALL THE "askForHuman" TOOL IMMEDIATELY AND RESPOND WITH ${ASKED_FOR_HUMAN_RESPONSE}.
 
 Task:
-You will reply to the user's messages in a helpful and friendly manner, answering their questions, providing information about Sparky's services, and assisting them with any inquiries they have. Here is a list of questions that you must ask the user to better understand their needs and provide accurate assistance:
+You will reply to the user's messages in a helpful and friendly manner, answering their questions, providing information about Sparky's services, and assisting them with any inquiries they have. Here is a list of questions (in french, but you may adapt the language to the user's message) that you must ask the user to better understand their needs and provide accurate assistance:
   ${JSON.stringify(allowedQuestions, null, 2)}
 
 Do NOT ask more than one question per message.
@@ -57,6 +59,9 @@ You are NOT allowed to estimate prices yourself without calling the tool.
 You are NOT allowed to mention the tool to the user. It is for internal use only.
 Specify to the user that the generated quote is a preliminary estimation and that a human agent will contact them to provide a more accurate quote after analyzing their needs in more detail.
 Once you call the adequate tool to generate the quote, ask for the customer's phone number if you haven't already, and then call the "askForHuman" tool to alert a human agent to take over the conversation then respond with "${ASKED_FOR_HUMAN_RESPONSE}".
+
+Here is a list of frequently asked questions and their answers:
+${JSON.stringify(frequentlyAskedQuestions, null, 2)}
 
 Here are some examples of conversations between you and the user:
 ${conversationExamples.map((example) => example.map((message) => `${message.role}: ${message.content}`).join("\n")).join("\n\n")}
@@ -132,6 +137,7 @@ ${conversationExamples.map((example) => example.map((message) => `${message.role
       },
       stopWhen: stepCountIs(5),
       abortSignal: abortController.signal,
+      temperature: 0.7,
     });
     aiResponse = text;
   } catch (error) {

@@ -9,17 +9,19 @@ export const companyInfo = {
 };
 
 export const allowedQuestions = {
-  address: { question: "What is your address?" },
+  address: { question: "Quelle est votre adresse?" },
   propertyType: {
     question:
-      "Is the solar panel installation for an agricultural, residential or commercial property?",
+      "Est-ce que l'installation photovoltaïque est pour une propriété agricole, résidentielle ou commerciale?",
     branches: {
       agricultural: {
-        questions: ["How powerful (in HP) and how deep is your well pump?"],
+        questions: [
+          "Quelle est la puissance (en HP) et la profondeur de votre pompe à eau?",
+        ],
       },
       residential: {
         questions: [
-          "How much is your average electricity usage? You can find this information on your electricity bill in kWh.",
+          "Combien est votre consommation électrique moyenne? Vous pouvez trouver cette information sur votre facture électrique en kWh.",
         ],
       },
       commercial: {
@@ -27,6 +29,11 @@ export const allowedQuestions = {
       },
     },
   },
+};
+
+export const frequentlyAskedQuestions = {
+  "Est-ce que vous faites des batteries solaires?":
+    "Oui, nous faisons des batteries solaires. Nous pouvons vous fournir un devis personnalisé en fonction de vos besoins.",
 };
 
 export const defaultIncreasePercent = 0.1;
