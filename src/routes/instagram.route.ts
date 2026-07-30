@@ -2,10 +2,8 @@ import express, { Router, Request, Response } from "express";
 import { verifyRequestSignature } from "../middleware/validation.middleware";
 import { verifyMetaWebhook } from "../utils/meta";
 import axios from "axios";
-import {
-  ASKED_FOR_HUMAN_RESPONSE,
-  generateResponse,
-} from "../controllers/agent.controller";
+import { generateResponse } from "../controllers/agent.controller";
+import { ASKED_FOR_HUMAN_RESPONSE } from "../data/sparky";
 import Conversation from "../models/Conversation";
 import {
   generationKey,

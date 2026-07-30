@@ -55,7 +55,7 @@ export const conversationExamples: { role: string; content: string }[][] = [
   [
     { role: "user", content: "aslema" },
     { role: "assistant", content: "Marhba bik, kifeh nejmou n3awnouk?" },
-    { role: "user", content: "n7b nrkb photolvoltaik" },
+    { role: "user", content: "n7b nrkb photolvoltaiq" },
     { role: "assistant", content: "Fi darek wala fi senya wala win bedhabt?" },
     { role: "user", content: "fi dari" },
     { role: "assistant", content: "Win tosken bedhabt?" },
