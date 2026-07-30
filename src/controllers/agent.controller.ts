@@ -1,6 +1,6 @@
 import { generateText, stepCountIs, tool } from "ai";
 import { z } from "zod";
-import { ConversationSchema } from "../models/Conversation";
+import { ConversationSchema } from "../models/Conversation.js";
 import { HydratedDocument } from "mongoose";
 import {
   allowedQuestions,
@@ -13,7 +13,7 @@ import {
   KILOWATT_PRICE_DINAR,
   MAX_PANEL_KILOWATT,
   MIN_PANEL_KILOWATT,
-} from "../data/sparky";
+} from "../data/sparky.js";
 import { anthropic } from "@ai-sdk/anthropic";
 
 export async function generateResponse(

@@ -1,22 +1,22 @@
 import express, { Router, Request, Response } from "express";
-import { verifyRequestSignature } from "../middleware/validation.middleware";
+import { verifyRequestSignature } from "../middleware/validation.middleware.js";
 import {
   WhatsAppWebhookPayload,
   whatsappWebhookSchema,
-} from "../schemas/whatsapp.schema";
+} from "../schemas/whatsapp.schema.js";
 import axios from "axios";
-import { verifyMetaWebhook } from "../utils/meta";
-import Conversation from "../models/Conversation";
+import { verifyMetaWebhook } from "../utils/meta.js";
+import Conversation from "../models/Conversation.js";
 import {
   generateResponse,
-} from "../controllers/agent.controller";
+} from "../controllers/agent.controller.js";
 import {
   abortIfRunning,
   generationKey,
   register,
   unregister,
-} from "../utils/generationRegistry";
-import { ASKED_FOR_HUMAN_RESPONSE } from "../data/sparky";
+} from "../utils/generationRegistry.js";
+import { ASKED_FOR_HUMAN_RESPONSE } from "../data/sparky.js";
 
 const router = Router();
 router.use(express.json({ verify: verifyRequestSignature }));

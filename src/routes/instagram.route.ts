@@ -1,20 +1,20 @@
 import express, { Router, Request, Response } from "express";
-import { verifyRequestSignature } from "../middleware/validation.middleware";
-import { verifyMetaWebhook } from "../utils/meta";
+import { verifyRequestSignature } from "../middleware/validation.middleware.js";
+import { verifyMetaWebhook } from "../utils/meta.js";
 import axios from "axios";
-import { generateResponse } from "../controllers/agent.controller";
-import { ASKED_FOR_HUMAN_RESPONSE } from "../data/sparky";
-import Conversation from "../models/Conversation";
+import { generateResponse } from "../controllers/agent.controller.js";
+import { ASKED_FOR_HUMAN_RESPONSE } from "../data/sparky.js";
+import Conversation from "../models/Conversation.js";
 import {
   generationKey,
   abortIfRunning,
   unregister,
   register,
-} from "../utils/generationRegistry";
+} from "../utils/generationRegistry.js";
 import {
   InstagramWebhookPayload,
   instagramWebhookSchema,
-} from "../schemas/instagram.schema";
+} from "../schemas/instagram.schema.js";
 
 const router = Router();
 router.use(express.json({ verify: verifyRequestSignature }));
