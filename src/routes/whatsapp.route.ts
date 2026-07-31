@@ -7,9 +7,7 @@ import {
 import axios from "axios";
 import { verifyMetaWebhook } from "../utils/meta.js";
 import Conversation from "../models/Conversation.js";
-import {
-  generateResponse,
-} from "../controllers/agent.controller.js";
+import { generateResponse } from "../controllers/agent.controller.js";
 import {
   abortIfRunning,
   generationKey,
@@ -35,6 +33,7 @@ router.post("/", async (req: Request, res: Response) => {
     return;
   }
 
+  const timestamp = new Date().toISOString();
   const payload = (req.body as WhatsAppWebhookPayload).entry[0].changes[0]
     .value;
   const userId = payload.messages[0].from;
@@ -58,7 +57,7 @@ router.post("/", async (req: Request, res: Response) => {
     return;
   }
   console.log(
-    `Received WhatsApp message from ${payload.messages[0].from}: "${payload.messages[0].text.body}"`,
+    `[${timestamp}] Received WhatsApp message from ${payload.messages[0].from}: "${payload.messages[0].text.body}"`,
   );
   try {
     await axios.post(
@@ -85,6 +84,7 @@ router.post("/", async (req: Request, res: Response) => {
   const key = generationKey("whatsapp", userId);
   if (abortIfRunning(key)) {
     console.warn(
+      `[${timestamp}]`,
       `Aborted previous generation for ${key} (timestamp: ${payload.messages[0].timestamp})`,
     );
   }
@@ -95,6 +95,7 @@ router.post("/", async (req: Request, res: Response) => {
   const { aiResponse } = await generateResponse(conversation, abortController);
   if (abortController.signal.aborted) {
     console.warn(
+      `[${timestamp}]`,
       `Generation was aborted for ${key} (timestamp: ${payload.messages[0].timestamp}), skipping reply.`,
     );
     res.sendStatus(200);
@@ -134,10 +135,10 @@ router.post("/", async (req: Request, res: Response) => {
         },
       },
     );
-    console.log(`(${echo.status}) Responded to ${userId} : "${aiResponse}"`);
+    console.log(`[${timestamp}] (${echo.status}) Responded to ${userId}."`);
     res.sendStatus(200);
   } catch (error) {
-    console.error("Error sending WhatsApp message:", error);
+    console.error(`[${timestamp}] Error sending WhatsApp message:`, error);
     res.sendStatus(500);
   }
 });

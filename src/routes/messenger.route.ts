@@ -2,9 +2,7 @@ import express, { Router, Request, Response } from "express";
 import { verifyRequestSignature } from "../middleware/validation.middleware.js";
 import { verifyMetaWebhook } from "../utils/meta.js";
 import axios from "axios";
-import {
-  generateResponse,
-} from "../controllers/agent.controller.js";
+import { generateResponse } from "../controllers/agent.controller.js";
 import Conversation from "../models/Conversation.js";
 import {
   generationKey,
@@ -34,11 +32,14 @@ router.post("/", async (req: Request, res: Response) => {
     res.status(400).json({ error: "Invalid webhook payload" });
     return;
   }
+  const timestamp = new Date().toISOString();
   const payload = (req.body as MessengerWebhookPayload).entry[0];
   const userId = payload.messaging[0].sender.id;
   const message = payload.messaging[0].message;
   if (message.attachments && message.attachments.length > 0) {
-    console.log("Received message with attachments, which are not supported. Ignoring.");
+    console.log(
+      `[${timestamp}] Received message with attachments, which are not supported. Ignoring.`,
+    );
     res.sendStatus(200);
     return;
   }
@@ -61,7 +62,9 @@ router.post("/", async (req: Request, res: Response) => {
     res.sendStatus(200);
     return;
   }
-  console.log(`Received Messenger message from ${userId}: "${message.text}"`);
+  console.log(
+    `[${timestamp}] Received Messenger message from ${userId}: "${message.text}"`,
+  );
   try {
     await axios.post(
       `https://graph.facebook.com/v25.0/${process.env.META_PAGE_ID}/messages`,
@@ -99,6 +102,7 @@ router.post("/", async (req: Request, res: Response) => {
   const key = generationKey("messenger", userId);
   if (abortIfRunning(key)) {
     console.warn(
+      `[${timestamp}]`,
       `Aborted previous generation for ${key} (timestamp: ${payload.time})`,
     );
   }
@@ -106,11 +110,10 @@ router.post("/", async (req: Request, res: Response) => {
   const abortController = new AbortController();
   register(key, abortController);
 
-
-
   const { aiResponse } = await generateResponse(conversation, abortController);
   if (abortController.signal.aborted) {
     console.warn(
+      `[${timestamp}]`,
       `Generation was aborted for ${key} (timestamp: ${payload.time}), skipping reply.`,
     );
     res.sendStatus(200);
@@ -144,9 +147,9 @@ router.post("/", async (req: Request, res: Response) => {
         },
       },
     );
-    console.log(`(${echo.status}) Responded to ${userId}.`);
+    console.log(`[${timestamp}] (${echo.status}) Responded to ${userId}.`);
   } catch (error) {
-    console.error("Error sending Messenger message:", error);
+    console.error(`[${timestamp}] Error sending Messenger message:`, error);
   }
 
   try {
@@ -166,8 +169,12 @@ router.post("/", async (req: Request, res: Response) => {
       },
     );
   } catch (error) {
-    console.error("Error retracting Messenger typing indicator:", error);
+    console.error(
+      `[${timestamp}] Error retracting Messenger typing indicator:`,
+      error,
+    );
   }
+  console.log(`[${timestamp}] Responded to ${userId}.`);
 
   res.sendStatus(200);
 });

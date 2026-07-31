@@ -33,10 +33,13 @@ router.post("/", async (req: Request, res: Response) => {
     return;
   }
 
+  const timestamp = new Date().toISOString();
   const payload = (req.body as InstagramWebhookPayload).entry[0];
   const userId = payload.messaging[0].sender.id;
   const messageText = payload.messaging[0].message.text;
-  console.log(`Received Instagram message from ${userId}: "${messageText}"`);
+  console.log(
+    `[${timestamp}] Received Instagram message from ${userId}: "${messageText}"`,
+  );
 
   const conversation = await Conversation.findOneAndUpdate(
     {
@@ -61,6 +64,7 @@ router.post("/", async (req: Request, res: Response) => {
   const key = generationKey("instagram", userId);
   if (abortIfRunning(key)) {
     console.warn(
+      `[${timestamp}]`,
       `Aborted previous generation for ${key} (timestamp: ${payload.time})`,
     );
   }
@@ -71,6 +75,7 @@ router.post("/", async (req: Request, res: Response) => {
   const { aiResponse } = await generateResponse(conversation, abortController);
   if (abortController.signal.aborted) {
     console.warn(
+      `[${timestamp}]`,
       `Generation was aborted for ${key} (timestamp: ${payload.time}), skipping reply.`,
     );
     res.sendStatus(200);
@@ -104,9 +109,11 @@ router.post("/", async (req: Request, res: Response) => {
         },
       },
     );
-    console.log(`(${echo.status}) Responded to ${userId} : "${aiResponse}"`);
+    console.log(
+      `[${timestamp}] (${echo.status}) Responded to ${userId} : "${aiResponse}"`,
+    );
   } catch (error) {
-    console.error("Error sending Instagram message:", error);
+    console.error(`[${timestamp}] Error sending Instagram message:`, error);
   }
 
   res.sendStatus(200);
