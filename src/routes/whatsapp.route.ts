@@ -52,13 +52,15 @@ router.post("/", async (req: Request, res: Response) => {
     },
     { upsert: true, returnDocument: "after" },
   );
-  if (conversation.get("hoursSinceAskedForHuman") < 12) {
+  const hoursSinceAskedForHuman = conversation.get("hoursSinceAskedForHuman");
+  if (hoursSinceAskedForHuman < 12) {
+    console.log(
+      `[${timestamp}]`,
+      `Skipping reply to ${userId} because only ${hoursSinceAskedForHuman} hours have passed since they asked for human help.`,
+    );
     res.sendStatus(200);
     return;
   }
-  console.log(
-    `[${timestamp}] Received WhatsApp message from ${payload.messages[0].from}: "${payload.messages[0].text.body}"`,
-  );
   try {
     await axios.post(
       `https://graph.facebook.com/v24.0/${process.env.WHATSAPP_SENDER_PHONE_NUMBER_ID}/messages`,
