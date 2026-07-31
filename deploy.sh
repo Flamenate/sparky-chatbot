@@ -20,20 +20,20 @@ if [ "$CURRENT" = "$LATEST" ]; then
     exit 0
 fi
 
-echo "[$current_time] New version detected, deploying..."
+echo "[$current_time] New version detected, starting redeployment..."
 
 # Update code
 git reset --hard origin/main
 
 chmod +x ./deploy.sh
 
-# Install dependencies if needed
-/home/ubuntu/.nvm/versions/node/v26.5.0/bin/pnpm install
+echo "[$current_time] Installing dependencies..."
+/home/ubuntu/.nvm/versions/node/v26.5.0/bin/pnpm install --frozen-lockfile
 
-# Build if your project requires it
+echo "[$current_time] Building..."
 /home/ubuntu/.nvm/versions/node/v26.5.0/bin/pnpm build
 
-# Restart the app
+echo "[$current_time] Restarting..."
 /home/ubuntu/.nvm/versions/node/v26.5.0/bin/pm2 restart dist/index.js
 
 echo "[$current_time] Deployment complete."
