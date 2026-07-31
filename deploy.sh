@@ -30,7 +30,7 @@ git reset --hard origin/main
 chmod +x ./deploy.sh
 
 echo "[$current_time] Installing dependencies..."
-/home/ubuntu/.nvm/versions/node/v26.5.0/bin/pnpm install --frozen-lockfile
+/home/ubuntu/.nvm/versions/node/v26.5.0/bin/pnpm install --frozen-lockfile --force
 
 echo "[$current_time] Building..."
 /home/ubuntu/.nvm/versions/node/v26.5.0/bin/pnpm build
