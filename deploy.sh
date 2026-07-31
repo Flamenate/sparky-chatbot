@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+export PATH="/home/ubuntu/.nvm/versions/node/v26.5.0/bin:/usr/bin:/bin"
+
 cd /home/ubuntu/sparky-chatbot
 
 current_time=$(date "+%Y-%m-%d %H:%M:%S")
