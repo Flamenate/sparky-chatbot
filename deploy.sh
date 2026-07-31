@@ -34,6 +34,6 @@ pnpm install
 pnpm build
 
 # Restart the app
-pm2 reload dist/index.js
+pm2 restart dist/index.js
 
 echo "[$current_time] Deployment complete."
