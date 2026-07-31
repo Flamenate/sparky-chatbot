@@ -28,12 +28,12 @@ git reset --hard origin/main
 chmod +x ./deploy.sh
 
 # Install dependencies if needed
-pnpm install
+/home/ubuntu/.nvm/versions/node/v26.5.0/bin/pnpm install
 
 # Build if your project requires it
-pnpm build
+/home/ubuntu/.nvm/versions/node/v26.5.0/bin/pnpm build
 
 # Restart the app
-pm2 restart dist/index.js
+/home/ubuntu/.nvm/versions/node/v26.5.0/bin/pm2 restart dist/index.js
 
 echo "[$current_time] Deployment complete."
