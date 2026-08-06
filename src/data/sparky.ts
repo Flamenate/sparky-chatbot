@@ -51,6 +51,13 @@ export const KILOWATT_PRICE_DINAR = 1000;
 export const MIN_PANEL_KILOWATT = 0.43;
 export const MAX_PANEL_KILOWATT = 0.6;
 
+export const PRICE_AGRI = {
+  LESS_THAN_4: 7800,
+  LESS_THAN_6: 10300,
+  LESS_THAN_8: 14000,
+  LESS_THAN_11: 18000,
+};
+
 export const conversationExamples: { role: string; content: string }[][] = [
   [
     { role: "user", content: "aslema" },

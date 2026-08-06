@@ -3,16 +3,17 @@ import { z } from "zod";
 import { ConversationSchema } from "../models/Conversation.js";
 import { HydratedDocument } from "mongoose";
 import {
-  allowedQuestions,
-  ASKED_FOR_HUMAN_RESPONSE,
-  companyInfo,
-  conversationExamples,
-  defaultIncreasePercent,
-  frenchOnlyWords,
-  frequentlyAskedQuestions,
-  KILOWATT_PRICE_DINAR,
-  MAX_PANEL_KILOWATT,
-  MIN_PANEL_KILOWATT,
+    allowedQuestions,
+    ASKED_FOR_HUMAN_RESPONSE,
+    companyInfo,
+    conversationExamples,
+    defaultIncreasePercent,
+    frenchOnlyWords,
+    frequentlyAskedQuestions,
+    KILOWATT_PRICE_DINAR,
+    MAX_PANEL_KILOWATT,
+    MIN_PANEL_KILOWATT,
+    PRICE_AGRI,
 } from "../data/sparky.js";
 import { anthropic } from "@ai-sdk/anthropic";
 
@@ -119,13 +120,15 @@ ${conversationExamples.map((example) => example.map((message) => `${message.role
           execute: async ({ wellPumpPowerInHp, wellDepthMoreThan100 }) => {
             let averagePrice: number;
             if (wellPumpPowerInHp < 4) {
-              averagePrice = 7800 + (wellDepthMoreThan100 as any) * 1000;
+              averagePrice =
+                PRICE_AGRI.LESS_THAN_4 + (wellDepthMoreThan100 as any) * 1000;
             } else if (wellPumpPowerInHp < 6) {
-              averagePrice = 10300 + (wellDepthMoreThan100 as any) * 1000;
+              averagePrice =
+                PRICE_AGRI.LESS_THAN_6 + (wellDepthMoreThan100 as any) * 1000;
             } else if (wellPumpPowerInHp < 8) {
-              averagePrice = 14000;
+              averagePrice = PRICE_AGRI.LESS_THAN_8;
             } else if (wellPumpPowerInHp < 11) {
-              averagePrice = 18000;
+              averagePrice = PRICE_AGRI.LESS_THAN_11;
             } else {
               averagePrice = 0;
             }
@@ -135,7 +138,7 @@ ${conversationExamples.map((example) => example.map((message) => `${message.role
           },
         }),
       },
-      stopWhen: stepCountIs(5),
+      stopWhen: stepCountIs(6),
       abortSignal: abortController.signal,
       temperature: 0.7,
     });
