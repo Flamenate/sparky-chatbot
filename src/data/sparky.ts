@@ -3,7 +3,7 @@ export const ASKED_FOR_HUMAN_RESPONSE = "ASKED FOR HUMAN";
 export const companyInfo = {
   companyName: "Sparky",
   location: "Sakiet Ezzit, Sfax, Tunisie",
-  phoneNumber: "+216 98 624 731",
+  phoneNumber: "+216 44 500 445",
   email: "sparkysolutionsphotovoltaique@gmail.com",
   website: null,
 };
