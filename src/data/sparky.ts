@@ -24,7 +24,7 @@ export const allowedQuestions = {
       },
       residential: {
         questions: [
-          "Combien est votre consommation électrique moyenne? Vous pouvez trouver cette information sur votre facture électrique en kWh.",
+          "Combien est votre consommation électrique moyenne? Vous pouvez trouver cette information sur votre facture électrique en kWh. Si vous ne la connaissez pas, vous pouvez indiquer le montant de votre facture en dinars.",
         ],
       },
       commercial: {
@@ -64,7 +64,10 @@ export const PRICE_AGRI = {
 export const conversationExamples: { role: string; content: string }[][] = [
   [
     { role: "user", content: "aslema" },
-    { role: "assistant", content: "Marhba bik, kifeh nejmou n3awnouk?" },
+    {
+      role: "assistant",
+      content: `${introduction}\nMarhba bik, kifeh nejmou n3awnouk?`,
+    },
     { role: "user", content: "n7b nrkb photolvoltaiq" },
     { role: "assistant", content: "Fi darek wala fi senya wala win bedhabt?" },
     { role: "user", content: "fi dari" },
@@ -73,20 +76,25 @@ export const conversationExamples: { role: string; content: string }[][] = [
     {
       role: "assistant",
       content:
-        "3andekchi fekra 3la 9adeh l consommation moyenne mte3ek en KwH?",
+        "3andekchi fekra 3la 9adeh l consommation moyenne mte3ek en KwH? Ken ma 3andekch, tnajem t9olna 9adeh tjik l facture.",
     },
-    { role: "user", content: "mn3rch" },
+    { role: "user", content: "l facture 150 dinar" },
     {
       role: "assistant",
-      content: "Mouch mochkla. Tnajemchi t9olna 9adeh tjik l facture l3ada?",
+      content: "L facture heki 9adeh men chhar? Chhar, zouz, wala tlatha?",
     },
-    { role: "user", content: "150" },
+    { role: "user", content: "zouz chhar" },
+    {
+      role: "assistant",
+      content: "L'installation mte3ek monophasé wala triphasé?",
+    },
+    { role: "user", content: "mono" },
     {
       role: "assistant",
       content:
-        "W tnajemchi t9olna chnouma les appareils (exemple: frigo, climatiseur) li 3andek fel dar?",
+        "W 9adeh l disjoncteur principal mte3ek (par exemple 20 wala 32 ampère)?",
     },
-    { role: "user", content: "3ndi 3 clim" },
+    { role: "user", content: "20" },
     {
       role: "assistant",
       content:
@@ -102,7 +110,7 @@ export const conversationExamples: { role: string; content: string }[][] = [
     },
     {
       role: "assistant",
-      content: "Marhba bik! Tnajemchi t9olna win el senya bedhabt?",
+      content: `${introduction}\nMarhba bik! Tnajemchi t9olna win el senya bedhabt?`,
     },
     { role: "user", content: "sidi bouzid" },
     { role: "assistant", content: "w 9adeh men cheval l pompe mte3ek?" },
@@ -124,8 +132,7 @@ export const conversationExamples: { role: string; content: string }[][] = [
     },
     {
       role: "assistant",
-      content:
-        "Bienvenu. Pouvez vous indiquer si votre installation est pour une propriété agricole, résidentielle ou commerciale?",
+      content: `${introduction}\nPouvez vous indiquer si votre installation est pour une propriété agricole, résidentielle ou commerciale?`,
     },
     { role: "user", content: "C'est pour ma boutique." },
     {
@@ -136,4 +143,38 @@ export const conversationExamples: { role: string; content: string }[][] = [
     { role: "user", content: "98224226" },
     { role: "assistant", content: ASKED_FOR_HUMAN_RESPONSE },
   ],
+];
+
+export const MONO: Record<number, number> = {
+  10: 2,
+  15: 3,
+  20: 4,
+  32: 7,
+  45: 10,
+  60: 12,
+};
+
+export const TRI: Record<number, number> = {
+  10: 7,
+  15: 10,
+  20: 14,
+  25: 17,
+  32: 22,
+  40: 28,
+  50: 35,
+  60: 42,
+};
+
+export const TARIF_PUISSANCE = 0.7;
+export const TVA_ENERGIE = 0.19;
+export const TAXE_MUNICIPALE = 0.005;
+export const TARIF_FTE = 0.005;
+
+export const PALIERS_ENERGIE = [
+  { minimum: 1, maximum: 50, price: 0.062, tva: 0.07 },
+  { minimum: 51, maximum: 100, price: 0.096, tva: 0.07 },
+  { minimum: 101, maximum: 200, price: 0.176, tva: 0.07 },
+  { minimum: 201, maximum: 300, price: 0.218, tva: 0.07 },
+  { minimum: 301, maximum: 500, price: 0.341, tva: 0.13 },
+  { minimum: 501, maximum: Infinity, price: 0.414, tva: 0.13 },
 ];

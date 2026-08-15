@@ -14,8 +14,11 @@ import {
   KILOWATT_PRICE_DINAR,
   MAX_PANEL_KILOWATT,
   MIN_PANEL_KILOWATT,
+  MONO,
   PRICE_AGRI,
+  TRI,
 } from "../data/sparky.js";
+import { calculateEnergyBill, estimateMonthlyKwh } from "../data/calculSteg.js";
 import { anthropic } from "@ai-sdk/anthropic";
 
 export async function generateResponse(
@@ -80,6 +83,14 @@ You are NOT allowed to mention the tool to the user. It is for internal use only
 Specify to the user that the generated quote is a preliminary estimation and that a human agent will contact them to provide a more accurate quote after analyzing their needs in more detail.
 Once you call the adequate tool to generate the quote, ask for the customer's phone number if you haven't already, and then call the "askForHuman" tool to alert a human agent to take over the conversation then respond with "${ASKED_FOR_HUMAN_RESPONSE}".
 
+Notes about electricity consumption:
+Customers may answer with their consumption in kWh OR with their STEG bill amount in dinars (TND).
+- If they give kWh: call "calculateEnergyBill" to estimate their STEG bill in dinars, tell them that estimated bill, then call "generateQuoteResidential" with that monthly kWh.
+- If they give a bill amount in dinars, or do not know their kWh: ask follow-up questions ONE AT A TIME until you have all of: (1) bill amount in TND, (2) how many months the bill covers (1 = monthly, 2 = bimonthly, 3 = trimonthly, etc.), (3) wiring: monophasé (2 wires) or triphasé (4 wires), (4) main breaker (disjoncteur principal) in amperes.
+  Then call "estimateMonthlyKwh". Use the returned kwh_month as their monthly consumption. Tell them the estimated monthly kWh, then call "generateQuoteResidential" with that kWh.
+- Never invent bill amount, months, wires, or breaker. Never estimate kWh or STEG bill amounts yourself — always use the tools.
+- If a tool returns an error (for example an unrecognized breaker), ask the user to correct the value. Valid monophasé breakers: ${Object.keys(MONO).join(", ")} A. Valid triphasé breakers: ${Object.keys(TRI).join(", ")} A.
+
 Here is a list of frequently asked questions and their answers:
 ${JSON.stringify(frequentlyAskedQuestions, null, 2)}
 
@@ -107,6 +118,68 @@ ${conversationExamples.map((example) => example.map((message) => `${message.role
           },
         }),
 
+        calculateEnergyBill: tool({
+          description:
+            "Estimate the STEG electricity bill amount in TND for a given consumption in kWh. Use this when a residential customer provides their consumption in kWh. Do not estimate the bill yourself.",
+          inputSchema: z.object({
+            kwh: z.number().describe("Electricity consumption in kWh"),
+          }),
+          outputSchema: z.object({
+            estimatedBillTnd: z.number(),
+            error: z.string().optional(),
+          }),
+          execute: async ({ kwh }) => {
+            if (kwh <= 0) {
+              return {
+                estimatedBillTnd: 0,
+                error: "La consommation en kWh doit être positive.",
+              };
+            }
+            return {
+              estimatedBillTnd: Number(calculateEnergyBill(kwh).toFixed(3)),
+            };
+          },
+        }),
+        estimateMonthlyKwh: tool({
+          description:
+            "Estimate monthly electricity consumption in kWh from a STEG bill amount in dinars. Use this when a residential customer gives their bill amount instead of kWh. Collect bill amount, months covered, wiring, and main breaker first. Do not estimate kWh yourself.",
+          inputSchema: z.object({
+            billAmount: z
+              .number()
+              .describe("Bill amount in Tunisian dinars (TND)"),
+            months: z
+              .number()
+              .describe(
+                "Number of months the bill covers (1 monthly, 2 bimonthly, 3 trimonthly, etc.)",
+              ),
+            wires: z.number().describe("2 for monophasé, 4 for triphasé"),
+            breaker: z
+              .number()
+              .describe(
+                `Main breaker rating in amperes. Monophasé (wires=2): ${Object.keys(MONO).join(", ")}. Triphasé (wires=4): ${Object.keys(TRI).join(", ")}.`,
+              ),
+          }),
+          outputSchema: z.object({
+            kwh_month: z.number().optional(),
+            power_kva: z.number().optional(),
+            power_fee_ht: z.number().optional(),
+            power_fee_ttc: z.number().optional(),
+            total_power_fee_ttc: z.number().optional(),
+            bill_without_debt: z.number().optional(),
+            monthly_bill: z.number().optional(),
+            exact: z.boolean().optional(),
+            error: z.string().optional(),
+          }),
+          execute: async ({ billAmount, months, wires, breaker }) => {
+            try {
+              return estimateMonthlyKwh(billAmount, months, wires, breaker);
+            } catch (error) {
+              return {
+                error: error instanceof Error ? error.message : String(error),
+              };
+            }
+          },
+        }),
         generateQuoteResidential: tool({
           description:
             "Use this tool to generate a quote for the customer based on their average monthly electricity usage. Always use this tool to generate quotes, do NOT estimate prices yourself without calling this tool.",
