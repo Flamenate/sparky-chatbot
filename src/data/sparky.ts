@@ -39,7 +39,7 @@ export const frequentlyAskedQuestions = {
     "Oui, nous faisons des batteries solaires. Nous pouvons vous fournir un devis personnalisé en fonction de vos besoins.",
 };
 
-export const defaultIncreasePercent = 0.1;
+export const defaultIncreasePercent = 0.11;
 
 export const frenchOnlyWords = [
   "Sparky",
