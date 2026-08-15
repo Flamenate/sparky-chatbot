@@ -4,6 +4,10 @@ import { verifyMetaWebhook } from "../utils/meta.js";
 import axios from "axios";
 import { generateResponse } from "../controllers/agent.controller.js";
 import { ASKED_FOR_HUMAN_RESPONSE } from "../data/sparky.js";
+import {
+  isHumanAidPaused,
+  resumeAfterHumanAidIfNeeded,
+} from "../utils/humanAid.js";
 import Conversation from "../models/Conversation.js";
 import {
   generationKey,
@@ -56,15 +60,15 @@ router.post("/", async (req: Request, res: Response) => {
     },
     { upsert: true, returnDocument: "after" },
   );
-  const hoursSinceAskedForHuman = conversation.get("hoursSinceAskedForHuman");
-  if (hoursSinceAskedForHuman < 12) {
+  if (isHumanAidPaused(conversation)) {
     console.log(
       `[${timestamp}]`,
-      `Skipping reply to ${userId} because only ${hoursSinceAskedForHuman} hours have passed since they asked for human help.`,
+      `Skipping reply to ${userId} because they asked for human help less than 12 hours ago.`,
     );
     res.sendStatus(200);
     return;
   }
+  await resumeAfterHumanAidIfNeeded(conversation);
 
   const key = generationKey("instagram", userId);
   if (abortIfRunning(key)) {

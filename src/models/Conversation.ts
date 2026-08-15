@@ -1,10 +1,14 @@
 import { Schema, model } from "mongoose";
 
+/** Sentinel date meaning human aid is not active (never asked, or cooldown already consumed). */
+export const HUMAN_AID_INACTIVE_DATE = new Date("2020-01-01");
+
 export type ConversationSchema = {
   userId: string;
   messages: { role: "user" | "assistant"; content: string }[];
-  platform: "whatsapp" | "messenger";
+  platform: "whatsapp" | "messenger" | "instagram";
   askedForHuman: Date;
+  userMemory: string;
 };
 
 const schema = new Schema<ConversationSchema>({
@@ -16,8 +20,16 @@ const schema = new Schema<ConversationSchema>({
       _id: false,
     },
   ],
-  platform: { type: String, enum: ["whatsapp", "messenger"], required: true },
-  askedForHuman: { type: Date, default: new Date("2020-01-01") },
+  platform: {
+    type: String,
+    enum: ["whatsapp", "messenger", "instagram"],
+    required: true,
+  },
+  askedForHuman: {
+    type: Date,
+    default: () => new Date(HUMAN_AID_INACTIVE_DATE),
+  },
+  userMemory: { type: String, default: "" },
 });
 
 schema.virtual("hoursSinceAskedForHuman").get(function (

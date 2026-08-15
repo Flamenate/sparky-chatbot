@@ -3,17 +3,18 @@ import { z } from "zod";
 import { ConversationSchema } from "../models/Conversation.js";
 import { HydratedDocument } from "mongoose";
 import {
-    allowedQuestions,
-    ASKED_FOR_HUMAN_RESPONSE,
-    companyInfo,
-    conversationExamples,
-    defaultIncreasePercent,
-    frenchOnlyWords,
-    frequentlyAskedQuestions,
-    KILOWATT_PRICE_DINAR,
-    MAX_PANEL_KILOWATT,
-    MIN_PANEL_KILOWATT,
-    PRICE_AGRI,
+  allowedQuestions,
+  ASKED_FOR_HUMAN_RESPONSE,
+  companyInfo,
+  conversationExamples,
+  defaultIncreasePercent,
+  frenchOnlyWords,
+  frequentlyAskedQuestions,
+  introduction,
+  KILOWATT_PRICE_DINAR,
+  MAX_PANEL_KILOWATT,
+  MIN_PANEL_KILOWATT,
+  PRICE_AGRI,
 } from "../data/sparky.js";
 import { anthropic } from "@ai-sdk/anthropic";
 
@@ -26,7 +27,7 @@ export async function generateResponse(
     const { text } = await generateText({
       // model: ollama("gpt-oss:120b-cloud"),
       model: anthropic("claude-haiku-4-5-20251001"),
-      system: `Context:
+      instructions: `Context:
 You are a friendly commercial customer service assistant.
 You do NOT use markdown in your responses at all.
 You talk in French or in "Tunisian dialect" only. Make sure to respond in the language of the user's most recent message. If it's French, you speak French. If it's Tunisian dialect, you speak Tunisian dialect. 
@@ -41,9 +42,27 @@ ${JSON.stringify(companyInfo, null, 2)}
 
 You do not offer after-sales services. If the user asks for after-sales services, call the "askForHuman" tool instantly.
 IF AT ANY POINT DURING THE CONVERSATION THE USER ASKS TO TALK TO A REAL PERSON OR A MANAGER, CALL THE "askForHuman" TOOL IMMEDIATELY AND RESPOND WITH ${ASKED_FOR_HUMAN_RESPONSE}.
+When you call the "askForHuman" tool, you MUST pass a userMemory string summarizing all known facts about this customer: phone, address, property type, consumption/pump details, quote given, language, and any other useful notes. Omit unknown facts. Do not invent facts.
 
 Task:
-You will reply to the user's messages in a helpful and friendly manner, answering their questions, providing information about Sparky's services, and assisting them with any inquiries they have. Here is a list of questions (in french, but you may adapt the language to the user's message) that you must ask the user to better understand their needs and provide accurate assistance:
+You will reply to the user's messages in a helpful and friendly manner, answering their questions, providing information about Sparky's services, and assisting them with any inquiries they have. 
+Your first message in each conversation MUST start with the following statement: "${introduction}".
+
+${
+  conversation.userMemory?.trim()
+    ? `
+This is a returning customer. You already know the following facts from a previous conversation:
+${conversation.userMemory}
+
+This conversation is a NEW conversation (for example after a human agent handled them). Your first message MUST still start with "${introduction}".
+Greet them as a returning customer. Do NOT refer to a previous chat transcript.
+Do NOT re-ask qualifying questions that are already answered in the known facts above, unless the user is starting a new request that needs confirmation.
+Use the known facts to tailor assistance.
+`
+    : ""
+}
+
+Here is a list of questions (in french, but you may adapt the language to the user's message) that you must ask the user to better understand their needs and provide accurate assistance:
   ${JSON.stringify(allowedQuestions, null, 2)}
 
 Do NOT ask more than one question per message.
@@ -71,10 +90,19 @@ ${conversationExamples.map((example) => example.map((message) => `${message.role
       tools: {
         askForHuman: tool({
           description:
-            "Use this tool to mark that the user has asked to talk to a human. This will prevent the assistant from replying and will alert a human agent to take over the conversation.",
-          inputSchema: z.object({}),
-          execute: async () => {
-            await conversation.updateOne({ askedForHuman: new Date() });
+            "Use this tool to mark that the user has asked to talk to a human. This will prevent the assistant from replying and will alert a human agent to take over the conversation. Always pass a userMemory fact sheet of everything you know about this customer.",
+          inputSchema: z.object({
+            userMemory: z
+              .string()
+              .describe(
+                "Known facts about this customer: phone, address, property type, consumption or pump details, quote given, language, and any other useful notes. Omit unknown facts. Do not invent facts.",
+              ),
+          }),
+          execute: async ({ userMemory }) => {
+            const askedForHuman = new Date();
+            await conversation.updateOne({ askedForHuman, userMemory });
+            conversation.askedForHuman = askedForHuman;
+            conversation.userMemory = userMemory;
             return ASKED_FOR_HUMAN_RESPONSE;
           },
         }),

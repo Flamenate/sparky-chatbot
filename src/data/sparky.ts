@@ -8,6 +8,9 @@ export const companyInfo = {
   website: null,
 };
 
+export const introduction =
+  "Bonjour, je suis Sparky, votre assistant virtuel pour la gestion de votre installation photovoltaïque.";
+
 export const allowedQuestions = {
   address: { question: "Quelle est votre adresse?" },
   propertyType: {
